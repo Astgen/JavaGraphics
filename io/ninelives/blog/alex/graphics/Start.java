@@ -18,7 +18,7 @@ public class Start {
 		frame.setVisible(true);
 		graphics = (Graphics2D) frame.getContentPane().getGraphics();
 		
-		Bitmap bmp = new Bitmap("C:/Users/Alex Astgen/Downloads/images.jpg");
+		Bitmap bmp = new Bitmap("path/to/image");
 
 
 		bmp.draw(0,0,graphics);
