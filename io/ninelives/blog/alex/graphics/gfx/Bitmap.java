@@ -1,5 +1,7 @@
 package io.ninelives.blog.alex.graphics.gfx;
 
+import java.awt.Graphics2D;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -18,6 +20,10 @@ public class Bitmap {
 		pixels = new int[1];
 	}
 	
+	/**
+	 * Creates a Bitmap from an Image at the given path
+	 * @param path Path to Image
+	 */
 	public Bitmap(String path){
 		File f = new File(path);
 		try {
@@ -31,6 +37,12 @@ public class Bitmap {
 		}
 	}
 	
+	/**
+	 * Checks whether the x,y coordinate is within width,height.
+	 * @param x
+	 * @param y
+	 * @return
+	 */
 	private boolean withinBounds(int x, int y){
 		if(x < width && x > -1){
 			if(y < height && y > -1){
@@ -40,6 +52,12 @@ public class Bitmap {
 		return false;
 	}
 	
+	/**
+	 * Returns the INT_RGB of the pixel at x,y
+	 * @param x
+	 * @param y
+	 * @return
+	 */
 	public int getRGB(int x, int y){
 		if(withinBounds(x,y)){
 			//This will strip the Alpha channel from the pixel
@@ -48,6 +66,12 @@ public class Bitmap {
 		return -1;
 	}
 	
+	/**
+	 * Returns the INT_ARGB of the pixel at x,y
+	 * @param x
+	 * @param y
+	 * @return
+	 */
 	public int getARGB(int x, int y){
 		if(withinBounds(x,y)){
 			return pixels[y * width + x];
@@ -55,27 +79,51 @@ public class Bitmap {
 		return -1;
 	}
 	
+	/**
+	 * Returns the Alpha channel 0xFF000000 of the pixel at x,y
+	 * @param x
+	 * @param y
+	 * @return
+	 */
 	public int getAlpha(int x, int y){
 		if(withinBounds(x,y)){
 			return (pixels[y * width + x] >> 24 & 0xFF);
 		}
 		return -1;
 	}
-	
+
+	/**
+	 * Returns the Red channel 0x00FF0000 of the pixel at x,y
+	 * @param x
+	 * @param y
+	 * @return
+	 */
 	public int getRed(int x, int y){
 		if(withinBounds(x,y)){
 			return (pixels[y * width + x] >> 16 & 0xFF);
 		}
 		return -1;
 	}
-	
+
+	/**
+	 * Returns the Green channel 0x0000FF00 of the pixel at x,y
+	 * @param x
+	 * @param y
+	 * @return
+	 */
 	public int getGreen(int x, int y){
 		if(withinBounds(x,y)){
 			return (pixels[y * width + x] >> 8 & 0xFF);
 		}
 		return -1;
 	}
-	
+
+	/**
+	 * Returns the Blue channel 0x000000FF of the pixel at x,y
+	 * @param x
+	 * @param y
+	 * @return
+	 */
 	public int getBlue(int x, int y){
 		if(withinBounds(x,y)){
 			return (pixels[y * width + x] & 0xFF);
@@ -234,4 +282,59 @@ public class Bitmap {
 		return -1;
 	}
 	
+	public int getWidth(){
+		return width;
+	}
+	
+	public int getHeight(){
+		return height;
+	}
+	
+	/**
+	 * Draw the Bitmap to the screen
+	 * @param dx Starting X Pixel
+	 * @param dy Starting Y Pixel
+	 * @param dw Final width of image
+	 * @param dh Final height of image
+	 * @param sx Source XPixel
+	 * @param sy Source YPixel
+	 * @param sw Source Width
+	 * @param sh Source Height
+	 * @param rotation Rotation of image
+	 * @param gfx What the Bitmap is drawn to
+	 */
+	public void draw(int dx, int dy, int dw, int dh, int sx, int sy, int sw, int sh, float rotation, Graphics2D gfx){
+		if(withinBounds(sx,sy) &&
+		   withinBounds(sx+sw-1,sy+sh-1)){
+			AffineTransform at = new AffineTransform();
+			at.rotate(Math.toRadians(-rotation), dx + (dh/2), dy + (dh/2));
+			gfx.setTransform(at);
+			
+			int[] newPixels = new int[dw*dh];
+
+			float widthScale = (float)sw/dw;
+			float heightScale = (float)sh/dh;
+			
+			for(int j = dy; j < dh - 1; j++){
+				for(int k = dx; k < dw - 1; k++){
+
+					int pixX = (int)Math.round(k * widthScale);
+					int pixY = (int)Math.round(j * heightScale);
+					
+					newPixels[(j * dw) + k] = pixels[(pixY * width) + pixX];
+				}
+			}
+			BufferedImage img = new BufferedImage(dw,dh,BufferedImage.TYPE_INT_ARGB);
+			img.setRGB(0, 0, dw, dh, newPixels, 0, dw);
+			gfx.drawImage(img, dx, dy, dx+dw, dy+dh, null);
+			
+			gfx.setTransform(new AffineTransform());
+		}else{
+			System.out.println("Source image not within bounds");
+		}
+	}
+	
+	public void draw(int x, int y, Graphics2D gfx){
+		draw(x,y,width,height,0,0,width,height,0,gfx);
+	}
 }
