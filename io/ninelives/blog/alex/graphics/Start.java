@@ -12,6 +12,6 @@ import io.ninelives.blog.alex.graphics.gfx.Bitmap;
 public class Start {
 
 	public static void main(String[] args) throws IOException {
-		Bitmap bmp = new Bitmap("C:/Users/Alex Astgen/Downloads/images.jpg");
+		Bitmap bmp = new Bitmap("path/to/image");
 	}
 }
