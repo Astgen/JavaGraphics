@@ -190,7 +190,7 @@ public class Bitmap {
 	 * @return
 	 */
 	public int setRGB(int x, int y, int red, int green, int blue){
-		return setARGB(x,y,255,red,blue,green);
+		return setARGB(x,y,255,red,green,blue);
 	}
 	
 	/**
