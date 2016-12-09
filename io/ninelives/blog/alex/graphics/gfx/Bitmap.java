@@ -37,6 +37,16 @@ public class Bitmap {
 		}
 	}
 	
+	private Bitmap(int wid, int hei, int[] pix){
+		width = wid;
+		height = hei;
+		pixels = pix.clone();
+	}
+	
+	public Bitmap clone(){
+		return new Bitmap(width,height,pixels);
+	}
+	
 	/**
 	 * Checks whether the x,y coordinate is within width,height.
 	 * @param x
@@ -238,7 +248,7 @@ public class Bitmap {
 	 * @return
 	 */
 	public int setRGB(int x, int y, int red, int green, int blue){
-		return setARGB(x,y,255,red,green,blue);
+		return setARGB(x,y,getAlpha(x,y),red,green,blue);
 	}
 	
 	/**
@@ -252,21 +262,25 @@ public class Bitmap {
 	 * @return
 	 */
 	public int setARGB(int x, int y, int alpha, int red, int green, int blue){
-		if(alpha < 0 || alpha > 255){
-			System.out.println("New red value [" + alpha + "] out of bounds.");
-			return -1;
+		if(alpha < 0){
+			alpha = 0;
+		}else if(alpha > 255){
+			alpha = 255;
 		}
-		if(red < 0 || red > 255){
-			System.out.println("New red value [" + red + "] out of bounds.");
-			return -1;
+		if(red < 0){
+			red = 0;
+		}else if(red > 255){
+			red = 255;
 		}
-		if(green < 0 || green > 255){
-			System.out.println("New green value [" + green + "] out of bounds.");
-			return -1;
+		if(green < 0){
+			green = 0;
+		}else if(green > 255){
+			green = 255;
 		}
-		if(blue < 0 || blue > 255){
-			System.out.println("New blue value [" + blue + "] out of bounds.");
-			return -1;
+		if(blue < 0){
+			blue = 0;
+		}else if(blue > 255){
+			blue = 255;
 		}
 		if(withinBounds(x,y)){
 			int col = (red << 16) + (green << 8) + (blue);
@@ -315,9 +329,8 @@ public class Bitmap {
 			float widthScale = (float)sw/dw;
 			float heightScale = (float)sh/dh;
 			
-			for(int j = dy; j < dh - 1; j++){
-				for(int k = dx; k < dw - 1; k++){
-
+			for(int j = 0; j < dh - 1; j++){
+				for(int k = 0; k < dw - 1; k++){					
 					int pixX = (int)Math.round(k * widthScale);
 					int pixY = (int)Math.round(j * heightScale);
 					
@@ -326,7 +339,7 @@ public class Bitmap {
 			}
 			BufferedImage img = new BufferedImage(dw,dh,BufferedImage.TYPE_INT_ARGB);
 			img.setRGB(0, 0, dw, dh, newPixels, 0, dw);
-			gfx.drawImage(img, dx, dy, dx+dw, dy+dh, null);
+			gfx.drawImage(img, dx, dy, dw, dh, null);
 			
 			gfx.setTransform(new AffineTransform());
 		}else{
@@ -336,5 +349,179 @@ public class Bitmap {
 	
 	public void draw(int x, int y, Graphics2D gfx){
 		draw(x,y,width,height,0,0,width,height,0,gfx);
+	}
+	
+	public void draw(int x, int y, int wid, int hei, Graphics2D gfx){
+		
+	}
+
+	public Bitmap toGreyscale(){
+		Bitmap bmp = clone();
+		for(int y = 0; y < height; y++){
+			for(int x = 0; x < width; x++){
+				int r = bmp.getRed(x,y);
+				int g = bmp.getGreen(x,y);
+				int b = bmp.getBlue(x,y);
+				
+				int lum = (int)((r * 0.21) + (g * 0.72) + (b * 0.07));
+				
+				bmp.setRGB(x, y, lum, lum, lum);
+			}
+		}
+		return bmp;
+	}
+	
+	public Bitmap toSepia(){
+		Bitmap bmp = clone();
+		for(int y = 0; y < height; y++){
+			for(int x = 0; x < width; x++){
+				int r = bmp.getRed(x,y);
+				int g = bmp.getGreen(x,y);
+				int b = bmp.getBlue(x,y);
+
+				int newRed = (int)((r*0.393) + (g * 0.769) + (b * 0.189));
+				int newGreen = (int)((r*0.349) + (g * 0.686) + (b * 0.168));
+				int newBlue = (int)((r*0.272) + (g * 0.534) + (b * 0.131));
+				
+				bmp.setRGB(x, y, newRed, newGreen, newBlue);
+			}
+		}
+		return bmp;
+	}
+	
+	public Bitmap gaussianBlur(){
+		double[][] blur = 
+		{{0.00000067,0.00002292,0.00019117,0.00038771,0.00019117,0.00002292,0.00000067},
+		{0.00002292,0.00078634,0.00655965,0.01330373,0.00655965,0.00078633,0.00002292},
+		{0.00019117,0.00655965,0.05472157,0.11098164,0.05472157,0.00655965,0.00019117},
+		{0.00038771,0.01330373,0.11098164,0.22508352,0.11098164,0.01330373,0.00038771},
+		{0.00019117,0.00655965,0.05472157,0.11098164,0.05472157,0.00655965,0.00019117},
+		{0.00002292,0.00078633,0.00655965,0.01330373,0.00655965,0.00078633,0.00002292},
+		{0.00000067,0.00002292,0.00019117,0.00038771,0.00019117,0.00002292,0.00000067}};
+		
+		return applyKernel(blur);
+	}
+	
+	public Bitmap blur(){
+		double[][] sharp = 
+				{{0.111,0.111,0.111},
+				{0.111,0.111,0.111},
+				{0.111,0.111,0.111}};
+		
+		return applyKernel(sharp);
+	}
+	
+	public Bitmap sharpen(){
+		double[][] sharp = 
+				{{0,-1,0},
+				{-1,5,-1},
+				{0,-1,0}};
+		
+		return applyKernel(sharp);
+	}
+	
+	public Bitmap edgeDetect(){
+		double[][] edge = 
+				{{0,1,0},
+				{1,-4,1},
+				{0,1,0}};
+		
+		return applyKernelNoAlpha(edge);
+	}
+	
+	public Bitmap emboss(){
+		double[][] edge = 
+				{{-2,-1,0},
+				{-1,1,1},
+				{0,1,2}};
+		
+		return applyKernel(edge);
+	}
+	
+	public Bitmap applyKernelNoAlpha(double[][] kernel){
+		Bitmap bmp = clone();
+		int kernelHeight = kernel.length;
+		int kernelWidth = kernel[0].length;
+		
+		if(kernelHeight % 2 == 1 && kernelWidth % 2 == 1){
+			for(int y = 0; y < height; y++){
+				for(int x = 0; x < width; x++){
+					double r = 0;
+					double g = 0;
+					double b = 0;
+					
+					for(int yy = -(kernelHeight / 2); yy <= (kernelHeight / 2); yy++){
+						for(int xx = -(kernelWidth / 2); xx <= (kernelWidth / 2); xx++){
+							if(kernel[yy+(kernelHeight/2)][xx+(kernelWidth/2)] != 0){
+								if(bmp.withinBounds(x + xx, y + yy)){
+									r += getRed(x + xx, y + yy) * kernel[yy+(kernelHeight/2)][xx+(kernelWidth/2)];
+									g += getGreen(x + xx, y + yy) * kernel[yy+(kernelHeight/2)][xx+(kernelWidth/2)];
+									b += getBlue(x + xx, y + yy) * kernel[yy+(kernelHeight/2)][xx+(kernelWidth/2)];
+								}else{
+									//In edge cases just use the original pixel, instead of resizing image
+									r += getRed(x, y) * kernel[yy+(kernelHeight/2)][xx+(kernelWidth/2)];
+									g += getGreen(x, y) * kernel[yy+(kernelHeight/2)][xx+(kernelWidth/2)];
+									b += getBlue(x, y) * kernel[yy+(kernelHeight/2)][xx+(kernelWidth/2)];
+								}
+							}
+						}
+					}
+					
+					bmp.setRGB(x, y, (int)r, (int)g, (int)b);
+				}
+			}
+			return bmp;
+		}else{
+			System.out.println("kernel matrix must have odd width and height!");
+			return null;
+		}
+	}
+	
+	public Bitmap applyKernel(double[][] kernel){
+		Bitmap bmp = clone();
+		int kernelHeight = kernel.length;
+		int kernelWidth = kernel[0].length;
+		
+		if(kernelHeight % 2 == 1 && kernelWidth % 2 == 1){
+			for(int y = 0; y < height; y++){
+				for(int x = 0; x < width; x++){
+					double a = 0;
+					double r = 0;
+					double g = 0;
+					double b = 0;
+					
+					for(int yy = -(kernelHeight / 2); yy <= (kernelHeight / 2); yy++){
+						for(int xx = -(kernelWidth / 2); xx <= (kernelWidth / 2); xx++){
+							if(kernel[yy+(kernelHeight/2)][xx+(kernelWidth/2)] != 0){
+								if(bmp.withinBounds(x + xx, y + yy)){
+									a += getAlpha(x + xx, y + yy) * kernel[yy+(kernelHeight/2)][xx+(kernelWidth/2)];
+									r += getRed(x + xx, y + yy) * kernel[yy+(kernelHeight/2)][xx+(kernelWidth/2)];
+									g += getGreen(x + xx, y + yy) * kernel[yy+(kernelHeight/2)][xx+(kernelWidth/2)];
+									b += getBlue(x + xx, y + yy) * kernel[yy+(kernelHeight/2)][xx+(kernelWidth/2)];
+								}else{
+									//In edge cases just use the original pixel, instead of resizing image
+									a += getAlpha(x, y) * kernel[yy+(kernelHeight/2)][xx+(kernelWidth/2)];
+									r += getRed(x, y) * kernel[yy+(kernelHeight/2)][xx+(kernelWidth/2)];
+									g += getGreen(x, y) * kernel[yy+(kernelHeight/2)][xx+(kernelWidth/2)];
+									b += getBlue(x, y) * kernel[yy+(kernelHeight/2)][xx+(kernelWidth/2)];
+								}
+							}
+						}
+					}
+					
+					bmp.setARGB(x, y, (int)a, (int)r, (int)g, (int)b);
+				}
+			}
+			return bmp;
+		}else{
+			System.out.println("kernel matrix must have odd width and height!");
+			return null;
+		}
+	}
+	
+	public void save(String path) throws IOException{
+		BufferedImage img = new BufferedImage(width,height,BufferedImage.TYPE_INT_ARGB);
+		img.setRGB(0, 0, width, height, pixels, 0, width);
+		ImageIO.write(img, "png", new File(path));
 	}
 }
