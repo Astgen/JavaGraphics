@@ -318,8 +318,8 @@ public class Bitmap {
 			for(int j = dy; j < dh - 1; j++){
 				for(int k = dx; k < dw - 1; k++){
 
-					int pixX = (int)Math.round(k * widthScale);
-					int pixY = (int)Math.round(j * heightScale);
+					int pixX = (int)Math.round(k * widthScale) + sx;
+					int pixY = (int)Math.round(j * heightScale) + sy;
 					
 					newPixels[(j * dw) + k] = pixels[(pixY * width) + pixX];
 				}
