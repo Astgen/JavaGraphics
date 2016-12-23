@@ -37,6 +37,12 @@ public class Bitmap {
 		}
 	}
 	
+	/**
+	 * Creates a Bitmap with width, height and a set pixel array.
+	 * @param wid
+	 * @param hei
+	 * @param pix
+	 */
 	private Bitmap(int wid, int hei, int[] pix){
 		width = wid;
 		height = hei;
@@ -53,7 +59,7 @@ public class Bitmap {
 	 * @param y
 	 * @return
 	 */
-	private boolean withinBounds(int x, int y){
+	boolean withinBounds(int x, int y){
 		if(x < width && x > -1){
 			if(y < height && y > -1){
 				return true;
@@ -296,10 +302,18 @@ public class Bitmap {
 		return -1;
 	}
 	
+	/**
+	 * Gets the width of the Bitmap
+	 * @return Width of the Bitmap
+	 */
 	public int getWidth(){
 		return width;
 	}
 	
+	/**
+	 * Gets the height of the Bitmap
+	 * @return Height of the Bitmap
+	 */
 	public int getHeight(){
 		return height;
 	}
@@ -329,10 +343,10 @@ public class Bitmap {
 			float widthScale = (float)sw/dw;
 			float heightScale = (float)sh/dh;
 			
-			for(int j = 0; j < dh - 1; j++){
-				for(int k = 0; k < dw - 1; k++){					
-					int pixX = (int)Math.round(k * widthScale);
-					int pixY = (int)Math.round(j * heightScale);
+			for(int j = 0; j < dh; j++){
+				for(int k = 0; k < dw; k++){					
+					int pixX = (int)Math.round(k * widthScale) + sx;
+					int pixY = (int)Math.round(j * heightScale) + sy;
 					
 					newPixels[(j * dw) + k] = pixels[(pixY * width) + pixX];
 				}
@@ -347,14 +361,46 @@ public class Bitmap {
 		}
 	}
 	
+	/**
+	 * Draw the Bitmap to the screen
+	 * @param x X position of top left
+	 * @param y Y position of top left
+	 * @param gfx Graphics object to draw to
+	 */
 	public void draw(int x, int y, Graphics2D gfx){
 		draw(x,y,width,height,0,0,width,height,0,gfx);
 	}
 	
+	/**
+	 * Draw the Bitmap to the screen
+	 * @param x X position of the top left
+	 * @param y Y position of the top left
+	 * @param wid Desired width of the image
+	 * @param hei Desired height of the image
+	 * @param gfx Graphics object to draw to
+	 */
 	public void draw(int x, int y, int wid, int hei, Graphics2D gfx){
-		
+		draw(x,y,wid,hei,0,0,width,height,0,gfx);
+	}
+	
+	/**
+	 * Extracts a Bitmap from the whole image.
+	 * @return Sub Bitmap.
+	 */
+	public Bitmap subImage(int x, int y, int wid, int hei){
+		int[] newPixels = new int[wid*hei];
+		for(int j = 0; j < hei; j++){
+			for(int i = 0; i < wid; i++){
+				newPixels[(j * wid) + i] = pixels[((j + y) * width) + (i + x)];
+			}
+		}
+		return new Bitmap(wid, hei, newPixels);
 	}
 
+	/**
+	 * Converts the Bitmap to greyscale
+	 * @return Altered clone of this Bitmap
+	 */
 	public Bitmap toGreyscale(){
 		Bitmap bmp = clone();
 		for(int y = 0; y < height; y++){
@@ -371,6 +417,10 @@ public class Bitmap {
 		return bmp;
 	}
 	
+	/**
+	 * Converts the Bitmap to Sepia tone
+	 * @return Altered clone of this Bitmap
+	 */
 	public Bitmap toSepia(){
 		Bitmap bmp = clone();
 		for(int y = 0; y < height; y++){
@@ -389,6 +439,10 @@ public class Bitmap {
 		return bmp;
 	}
 	
+	/**
+	 * Applies a Gaussian blur to the Bitmap
+	 * @return Altered clone of this Bitmap
+	 */
 	public Bitmap gaussianBlur(){
 		double[][] blur = 
 		{{0.00000067,0.00002292,0.00019117,0.00038771,0.00019117,0.00002292,0.00000067},
@@ -402,6 +456,10 @@ public class Bitmap {
 		return applyKernel(blur);
 	}
 	
+	/**
+	 * Applies an average blur to the Bitmap
+	 * @return Altered clone of this Bitmap
+	 */
 	public Bitmap blur(){
 		double[][] sharp = 
 				{{0.111,0.111,0.111},
@@ -411,6 +469,10 @@ public class Bitmap {
 		return applyKernel(sharp);
 	}
 	
+	/**
+	 * Applies a sharpen filter to the Bitmap
+	 * @return Altered clone of this Bitmap
+	 */
 	public Bitmap sharpen(){
 		double[][] sharp = 
 				{{0,-1,0},
@@ -420,6 +482,10 @@ public class Bitmap {
 		return applyKernel(sharp);
 	}
 	
+	/**
+	 * Applies an edge detect filter to the Bitmap
+	 * @return Altered clone of this Bitmap
+	 */
 	public Bitmap edgeDetect(){
 		double[][] edge = 
 				{{0,1,0},
@@ -429,6 +495,10 @@ public class Bitmap {
 		return applyKernelNoAlpha(edge);
 	}
 	
+	/**
+	 * Applies an emboss filter to the Bitmap
+	 * @return Altered clone of this Bitmap
+	 */
 	public Bitmap emboss(){
 		double[][] edge = 
 				{{-2,-1,0},
@@ -438,6 +508,10 @@ public class Bitmap {
 		return applyKernel(edge);
 	}
 	
+	/**
+	 * Applies a defined kernel to the Bitmap, disregarding the alpha channel
+	 * @return Altered clone of this Bitmap
+	 */
 	public Bitmap applyKernelNoAlpha(double[][] kernel){
 		Bitmap bmp = clone();
 		int kernelHeight = kernel.length;
@@ -477,6 +551,10 @@ public class Bitmap {
 		}
 	}
 	
+	/**
+	 * Applies a defined kernel to the Bitmap, including the alpha channel
+	 * @return Altered clone of this Bitmap
+	 */
 	public Bitmap applyKernel(double[][] kernel){
 		Bitmap bmp = clone();
 		int kernelHeight = kernel.length;
@@ -519,6 +597,11 @@ public class Bitmap {
 		}
 	}
 	
+	/**
+	 * Export the image to a file
+	 * @param path File to write to.
+	 * @throws IOException
+	 */
 	public void save(String path) throws IOException{
 		BufferedImage img = new BufferedImage(width,height,BufferedImage.TYPE_INT_ARGB);
 		img.setRGB(0, 0, width, height, pixels, 0, width);
