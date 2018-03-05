@@ -1,4 +1,4 @@
-package io.ninelives.blog.alex.graphics;
+package io.astgen.graphics;
 
 public class Start {
 
