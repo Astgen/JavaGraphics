@@ -1,11 +1,10 @@
-package io.ninelives.blog.alex.graphics;
+package io.astgen.graphics;
 
 import java.awt.Graphics2D;
-import java.io.IOException;
 
 import javax.swing.JFrame;
 
-import io.ninelives.blog.alex.graphics.gfx.Bitmap;
+import io.astgen.graphics.gfx.Bitmap;
 
 public class Start {
 	
