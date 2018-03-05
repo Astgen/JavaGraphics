@@ -1,4 +1,4 @@
-package io.ninelives.blog.alex.graphics.gfx;
+package io.astgen.graphics.gfx;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
